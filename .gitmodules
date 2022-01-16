@@ -1,0 +1,3 @@
+[submodule "latex-preamble"]
+	path = latex-preamble
+	url = https://github.com/troberson/latex-preamble
