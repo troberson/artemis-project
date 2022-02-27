@@ -110,22 +110,21 @@
 
 \section{Results to Date}
 
-Since the demonstration of the alpha prototype, Artemis Project has consolidated
-the wiring from the test bench setup. The wind vane, which will be the input
-for the yaw control system, was installed on the top of the nacelle. Three
-buck converters were installed on one side of the nacelle, and the Ardino
-control unit was placed on the other side. The \qty 5V power for the Arduino
-and the ground control was installed on the underside of the nacelle. Two
+Since the demonstration of the alpha prototype, Artemis Project has
+consolidated the wiring from the test bench setup. The wind vane, which will be
+the input for the yaw control system, was installed on the top of the nacelle.
+Three buck converters were installed on one side of the nacelle, and the
+Arduino control unit was placed on the other side. The \qty 5V power for the
+Arduino and the ground control were installed on the nacelle's underside. Two
 Anderson power pole connectors for the generated power were connected to the
 outputs from the buck converter.
 
-After the conclusion of last semester, the first task that was done was
-consolidating the wiring from the test bench setup. The wind vane was placed
-on the top of the nacelle, all three buck converters were placed on one side
-of the nacelle and the Arduino was placed on the other side, with \qty{5}{\V}
-and ground busses underneath the nacelle. Two power pole connectors for the
-output power connected to the buck convertor outputs. These are shown in
-\ref{img:prototype}.
+After the conclusion of last semester, the first task was consolidating the
+wiring from the test bench setup. The wind vane was placed on the top of the
+nacelle, all three buck converters were placed on one side of the nacelle, and
+the Arduino was placed on the other side, with \qty{5}{\V} and ground busses
+underneath the nacelle. Two power pole connectors are connected to the buck
+converter outputs for the output power. These are shown in \ref{img:prototype}.
 
 \begin{figure}[th]
     \centering
@@ -136,21 +135,21 @@ output power connected to the buck convertor outputs. These are shown in
     \label{img:prototype}
 \end{figure}
 
-Two of the buck converters were damaged from increased voltage during a high
-speed rotor test and were replaced. However, this test confirmed that the
+Two of the buck converters were damaged from increased voltage during a
+high-speed rotor test and were replaced. However, this test confirmed that the
 remainder of the system withstood speeds of over \qty{2000}{RPM}.
 
 The computer functionality for the yaw control has been completed and tested.
 The turbine blades must be perpendicular to the wind direction to generate the
-maximum power. The wind tunnel blows in a single direction but by rotating the
-turbine, winds from different directions can be simulated. If the wind is not
-blowing from directly in front of the turbine, the turbine will rotate itself
-using a continuous servo so as to face the wind. A digital threshold creates a
-hysteresis effect to avoid constant adjustments.
+maximum power. The wind tunnel blows in a single direction, but winds from
+different directions can be simulated by rotating the turbine. If the wind is
+not blowing directly in front of the turbine, it will rotate itself using a
+continuous servo to face the wind. A digital threshold creates a hysteresis
+effect to avoid constant adjustments.
 
-In high winds, the yaw control will be used to rotate the turbine to be parallel
-with the wind so as to avoid damage to the turbine blades and potentially
-harmful excess power generation, which can cause overheating and fire damage.
+In high winds, the yaw control will rotate the turbine to be parallel with the
+wind to avoid damage to the turbine blades and potentially harmful excess power
+generation, which can cause overheating and fire damage.
 
 \section{Analysis, Modeling, and Simulation Results}
 
@@ -160,20 +159,23 @@ harmful excess power generation, which can cause overheating and fire damage.
 \subsection{Yaw Control}
 \label{sec:yaw_control}
 
-For the alpha prototype, the yaw control utilized a 360 degree servo motor to
-adjust the direction the turbine faces based on the wind vane. The servo was
-not continuous. Once it reached its maximum rotation, it had to rotate the
-opposite direction. This caused issues if the wind was coming from near the
-servo's maximum or minimum rotational ability. Also, this servo required a
-1:1 gear ratio to the nacelle, which required a great deal of torque to turn.
-The servo utilized was also large and drew excessive power, making it unsuitable
+For the alpha prototype, the yaw control utilized a 360-degree servo motor to
+adjust the turbine's direction based on the wind vane. The servo was not
+continuous. Once it reached its maximum rotation, it had to rotate in the
+opposite direction. This limitation caused issues if the wind came from near the
+servo's maximum or minimum rotational ability. Also, this servo required a 1:1
+gear ratio to the nacelle and required a great deal of torque to turn. The
+servo utilized was also large and drew excessive power, making it unsuitable
 for lower wind speeds.
 
 The new replacement yaw control servo is continuous and draws much less power.
-The limit on rotation is based on the physical wire connection. The new servo,
-however produces less torque and is unable to rotate the nacelle. Even with
-the addition of 3D-printed gearing and lubrication, the new servo is still
-unsuitable because it cannot overcome the static friction on the support.
+However, the new servo produces less torque and is unable to rotate the
+nacelle. The rotation limit is based on the physical wire connection.
+Presently, a slip ring mechanism is not used because of the limited requirements
+of the Collegiate Wind Competition tests but may be implemented if the twisting
+of the wire connections becomes and issue. Unfortunately, even with 3D-printed
+gearing and lubrication, the new servo is still unsuitable because it cannot
+overcome the static friction on the support.
 
 One possible solution is to add bearings to reduce the friction between the
 nacelle and the support. Another solution is to use two of the smaller servos.
@@ -184,20 +186,20 @@ nacelle and the support. Another solution is to use two of the smaller servos.
 
 The load control simulation setup consists of a manually-adjustable
 \qty{200}{\ohm} rheostat, shown in Figure \ref{img:rheostat}; a Festo four
-quadrant dynamometer, with 2:1 belt transmission pulley ratio coupling
+quadrant dynamometer, with a 2:1 belt transmission pulley ratio coupling
 mechanism, shown in Figure \ref{img:dyno}; and the beta prototype shown in
 Figure \ref{img:prototype}.
 
 The beta prototype rotor axle is coupled to the dynamometer transmission
 axle using a coupling adapter with slip and vibration compensation
-capability. The dynamometer is controlled by the LabVolt Data Acquisition
-and Control Interface installed on the Windows 10 laptop. The power output
-of the system is assessed using current measuring functionality of an
+capability. The dynamometer is controlled by LabVolt Data Acquisition and
+Control Interface software installed on a Windows 10 laptop. The power output
+of the system is assessed using the current measuring functionality of an
 onboard Precision Digital Current and Power Monitor - INA 260, positioned
-according to number 5 location in Figure \ref{img:prototype}.
+at the number 5 callout in Figure \ref{img:prototype}.
 
-The accuracy of the measured current data is verified through the stand-alone
-Fluke multimeter. The voltage is measured separately by another independent
+The accuracy of the measured current data is verified using a stand-alone Fluke
+multimeter. The voltage is measured separately by another independent
 multimeter.
 
 \begin{figure}[th]
@@ -213,8 +215,8 @@ multimeter.
     \label{img:dyno}
 \end{figure}
 
-During the preparation stage of the analysis, the team determined that the
-most useful input parameter would be the torque that the prototype's rotor axle
+During the preparation stage of the analysis, the team determined that the most
+useful input parameter would be the torque that the prototype's rotor axle
 (shown in Figure \ref{img:prototype}, callout 7) experienced at various wind
 speeds. Other input parameters are expressed in terms of this torque. The
 mechanical engineering subteam of the Everett Wind Energy Team (EWET)
@@ -238,7 +240,7 @@ be between \qty{.1}{\newton\m} and \qty{.3}{\newton\m}. This assumption was
 based on previous experiments which demonstrated the approximate range of the
 available rotor axle speeds relative to the wind speeds.
 
-Thus torque was taken to be the input parameter and generated power is the
+Thus torque is used as the input parameter, and generated power is the
 output parameter. The load control constants were determined by observing the
 Arduino controller operational threshold as one limiting factor and maximum
 available power as the other limiting factor. It was determined experimentally
@@ -249,26 +251,26 @@ This result indicates that there is \qty{60}{\mA} of reserve current available
 at this torque level for pitch control and data analysis, assuming a
 \qty{5}{\V} Arduino supply. At \qty{.3}{\newton\m} torque power output was
 measured to be $\sim$\qty{50}{\W}. In this experiment, the rotor's speed was
-not captured because it was not a function of pitch control and tip speed ratio
-which are not available in the dynamometer simulation setup as controlled
+not captured because it was not a function of the pitch control and tip speed
+ratio, which are not available in the dynamometer simulation setup as controlled
 parameters.
 
 \subsection{Pitch Control}
 
 During the alpha prototype development, the turbine was tested in the wind
-tunnel by manually adjusting the pitch angle of the blades. The team discovered
-that a steep angle of attack produced high torque and low rotational speed.
-Conversely, a shallow angle of attack produced low torque and higher rotational
-speed. The pitch control was designed to be able to control the torque and
-rotational speed of the rotor to extract the maximum power from the wind.
+tunnel by manually adjusting the pitch angle of the blades. The pitch control
+was designed to control the torque and rotational speed of the rotor to extract
+the maximum power from the wind. The team discovered that a steep angle of
+attack produced high torque and low rotational speed. Conversely, a shallow
+angle of attack produced low torque and higher rotational speed.
 
-To achieve this, the pitch control mechanism uses a rod which traverses the
-main shaft of the rotor. This will move linearly to adjust the pitch to a
-steeper or shallower angle of attack. The particulars of the mechanism are
-still being designed. However, the team has decided to utilize a 180 degree
-servo to control the pitch angle. Mathematically, the rotational motion of the
-servo and the linear motion of the shaft are related by Equation
-\eqref{eq:shaft}:
+The angle of attack will be adjusted by the pitch control mechanism using a
+rod that traverses the main shaft of the rotor. The rod will move linearly to
+adjust the pitch to a steeper or shallower angle of attack. The particulars of
+the mechanism are still being designed. However, the team has decided to
+utilize a 180-degree servo to control the pitch angle. Mathematically, the
+rotational motion of the servo and the linear motion of the shaft are related
+by Equation \eqref{eq:shaft}:
 
 \begin{equation}
     \label{eq:shaft}
@@ -287,14 +289,14 @@ to the linear shaft motion.
     \label{img:pitch_control}
 \end{figure}
 
-An alternative pitch control mechanism is to use a continuous servo in
-combination with a rack and pinion to move the shaft. However, the angle of a
-continuous servo cannot be determined, only the speed and direction, which
-would create an open control loop. This would require that other inputs, such
-as wind and rotor speeds, would be measured after the pitch adjustment to
+An alternative pitch control mechanism is to use a continuous servo with a rack
+and pinion to move the shaft. However, the angle of a continuous servo cannot
+be determined, only the speed and direction, which would create an open control
+loop. Without the angle as a known input, this would require that other inputs,
+such as wind and rotor speeds, would be measured after the pitch adjustment to
 decide if additional adjustments are required. Reading these additional values
 will increase the response time. Therefore, the team decided to use a
-traditional non-continuous 180 degree servo.
+traditional non-continuous 180-degree servo.
 
 \subsection{MakerPlot}
 
@@ -307,21 +309,21 @@ traditional non-continuous 180 degree servo.
 \section{Beta Prototype Validation Results}
 \subsection{Power Verification Analysis}
 
-The verification of the system's power output is a complex process that
-directly depends on the functionality of the system's controls. The current
-progress towards verification was described in Section \ref{sec:load_control}:
-``Load Control.'' In summary, the current prototype solution has demonstrated
-that it will be able to sustain the predicted power output of the system.
+Verifying the system's power output is a complex process that depends on the
+functionality of the system's controls. The current progress towards
+verification as described in Section \ref{sec:load_control}: ``Load Control.''
+In summary, the current prototype solution has demonstrated that it will
+sustain the predicted power output of the system.
 
 The system has been verified to produce \qty{.3}{\W} of power at
 \qty{.1}{\newton\m} of torque and \qty{50}{\W} at \qty{.3}{\newton\m}.
 
 \subsection{Power Quality Analysis}
 
-The Collegiate Wind Competition (CWC) will judge the quality of the turbine's
-power output based on its stability over a five second period. The electrical
-noise produced by power electronics switching to manage the system's output is a
-factor that must be minimized.
+The Collegiate Wind Competition (CWC) will judge the turbine's power output
+quality based on its stability over five seconds. The electrical noise produced
+by power electronics switching to manage the system's output is a factor that
+must be minimized.
 
 A Digilent Analog Discovery Studio board and associated WaveForms software was
 used as an oscilloscope to measure the prototype's power output quality. The
@@ -330,24 +332,25 @@ Appendix \ref{apx:images}. These figures demonstrate that the voltage
 fluctuation is within \qty{10}{\percent} of the measured mean voltage
 magnitude, and the ripple is \qty{2}{\percent} of the same relative magnitude.
 These findings, however, are not indicative of the pass-fail status of the
-measured power output and further clarification is needed of the terms in which
+measured power output, and further clarification is needed of the terms in which
 power quality judgments will be passed.
 
 \section{Summary of Work Remaining this Semester}
 \subsection{Mechanical}
 
-\emph{[I talk about this in the beta test results section, so this can probably be condensed down to just a sentence or so.]}
+\emph{[I talk about this in the beta test results section, so this can probably
+            be condensed down to just a sentence or so.]}
 
 As discussed in Section \ref{sec:yaw_control}, the yaw control is currently
-being revised by the mechanical engineering subteam at EWET. During alpha
-prototype testing, Artemis Project determined that the existing mechanism was
+being revised by the mechanical engineering subteam at EWET. Artemis Project
+determined during alpha prototype testing that the existing mechanism was
 insufficient to allow the current continuous servo motor to turn the nacelle.
 As discussed, a bearing mechanism will be implemented to determine if that
 will be sufficient to reduce friction. If not, a second servo motor will be
 installed.
 
 The pitch control design is nearing completion. The next stage is to replace
-the existing setup with the improved design. Tests will be conducted to
+the existing setup with an improved design. Tests will be conducted to
 determine the effectiveness of the new pitch control mechanism. The final stage
 is to create packaging for the load components to ensure that they are
 implemented according to the CWC requirements.
@@ -363,36 +366,32 @@ implemented according to the CWC requirements.
 
 \subsection{Programing}
 
-Developing the pitch control software will largely require the completion and
+Developing the pitch control software will primarily require the completion and
 testing of the physical mechanism to determine the details of what is needed.
-Since the 180 degree non-continuous servo motor was chosen to control the
-linear motion of the shaft, some preliminary software development can be
-completed. The geometry and mechanics of the shaft relative to the servo are
-known. However, we do not yet know how the connections on the other end of the
-shaft will affect the rate of change of the pitch. Once the design has been
-solidified and a prototype implemented, the relationship between the motor and
-the motion of the shaft can be determined experimentally.
+Because the 180-degree, non-continuous servo motor was chosen to control the
+linear motion of the shaft, preliminary software development can be completed.
+The geometry and mechanics of the shaft relative to the servo are known.
+However, we do not know how the connections on the other end of the shaft will
+affect the rate of change of the pitch. Once the pitch control mechanism has
+been implemented, the relationship between the motor and the shaft motion can
+be determined experimentally.
 
-For the power curve performance task of the competition, stable power must be
-generated at wind speeds from \qtyrange{5}{11}{\m\per\s}. To improve
-stability over a fixed blade design, the system needs a power pitch control
-algorithm. Tip speed ratios for each wind speed have been calculated
-theoretically to produce the most power possible. The buck converters limit the
-voltage and the load controls the current, so producing stable power should not
-be difficult.
+The system needs a power pitch control algorithm to improve power generation
+stability over a fixed blade design. For the ``power curve performance'' task
+of the competition, stable power must be generated at wind speeds from
+\qtyrange{5}{11}{\m\per\s}. The buck converters limit the voltage, and the load
+controls the current, so producing stable power should not be difficult. Tip
+speed ratios for each wind speed have been calculated that would theoretically
+produce the most power possible.
 
-
-
-However, the control system
-must determine if the tip speed ratio is too high for a certain load and wind
-speed in order to avoid stalling.
-
-Turbine blades have a similar shape as an airplane wing, called an airfoil. As
-with an airplane, a turbine can suffer a stall. If the angle of attack is too
-steep, the air flow can separate from the blade and cause turbulence, pushing
-the air in the boundary layer back towards the front of the wing or blade. For
-an airplane, this destroys lift, causing the airplane to fall. For a turbine,
-the rotational speed will slow significantly. This phenomenon is illustrated in
+The control system must also determine if the tip speed ratio is too high for a
+particular load and wind speed in order to avoid stalling. Turbine blades have
+a similar shape to an airplane wing, called an airfoil. As with an airplane, a
+turbine can suffer a stall. If the angle of attack is too steep, the airflow
+can separate from the blade and cause turbulence, pushing the air in the
+boundary layer back towards the front of the wing or blade. For an airplane,
+this destroys lift, causing the airplane to fall. For a turbine, the rotational
+speed will slow significantly. This phenomenon is illustrated in
 Figure \ref{img:stall}.
 
 \begin{figure}[th]
@@ -404,37 +403,39 @@ Figure \ref{img:stall}.
 \end{figure}
 
 It may be wise for the software to position the turbine blade angle for a
-more conservative tip speed ratio than calculated, to improve stability at the
-cost of some output power. This way the program can have predetermined pitch
+more conservative tip speed ratio than calculated to improve stability at the
+cost of some output power. This way, the program can have predetermined pitch
 angles for each wind speed that can be set and left alone unless prompted
-otherwise. Once the desired rotational speed is met then the load will be
+otherwise. Once the desired rotational speed is met, the load will be
 increased to the next step.
 
-The durability aspect of the competition requires that the turbine operate at
+The durability aspect of the competition requires that the turbine operates at
 variable winds speeds from \qtyrange{6}{22}{\m\per\s} for five minutes. The
-turbine must be able to produce power across this range. Artemis Project's
-primary concern, and the concern in producing an offshore wind farm in
-hurricane territory, is to keep the turbine's blades from being damaged or
-even torn off in a high wind situation. The pitch control system can adjust
-the blade's angle of attack to reduce speed and avoid damage in such cases,
-in addition to maximizing power output in normal conditions.
+turbine must be able to produce power across this range.
+
+Artemis Project's primary concern, and the concern in producing an offshore
+wind farm in hurricane territory is to keep the turbine's blades from being
+damaged or even torn off in a high wind situation. The pitch control system can
+adjust the blade's angle of attack to reduce speed and avoid damage in such
+cases, in addition to maximizing power output in normal conditions.
 
 However, even when trying to reduce blade rotational speed to protect the
-integrity of the turbine, the system must still be able to maintain a
+integrity of the turbine, the system must still be able to maintain
 consistent power output. With the current KV rating of the turbine, this is
 about $1400 \pm 300$\;RPM, which will likely be maintained if we can achieve
 low enough tip speed ratios. If low tip speed ratios cannot be achieved
-at high wind speeds due to mechanical limitations, this will require a blade or
-pitch mechanism redesign.
+at high wind speeds due to mechanical limitations, blade or
+pitch mechanism redesign will be required.
 
 
 \subsection{Power}
 
 A second Arduino connected to the load will receive commands from the turbine's
-Arduino controller and pass them to a bank of solid state relays. The
+Arduino controller and pass them to a bank of solid-state relays. The
 Arduino will switch between load resistance values using the onboard
-controller. The optimal values will be determined experimentally. This will
-need to be done after the mechanical subteam has implemented the relay system.
+controller. The optimal values will be determined experimentally. Implementing
+the software control system will need to wait until the mechanical subteam has
+implemented the relay system.
 
 \section{Conclusion}
 
