@@ -106,7 +106,21 @@
 
 \section{Broader Impacts and Contemporary Issues}
 
-\emph{[Use old material and adjust]}
+The general goal of wind energy production is to diversify energy sources away
+from fossil fuels, such as coal, oil, and natural gas and to reduce emissions.
+However, wind turbines are not without their critics and issues. Issues relating to noise pollution and obnoxious shadows aremitigated by moving the turbines to an offshore location. However, offshore turbines impact acquatic wildlife and fishing operations, as well as shipping and other ocean travel.
+
+The production of the turbines themselves and their installation is also energy- and resource-hungry, particularly for those components which would be
+manufactured in China or other overseas locations. Ensuring that as many components as possible are made in the United States would benefit the corporate image.
+
+The offshore installation would be in the Gulf of Mexico off the coast
+of Texas near Houston and Galveston. This is prime real estate for the offshore
+oil and gas market as well. Recently, a federal judge vacated the leases of
+80 million acres that had been auctioned last year, saying that the government
+did not properly account for the climate change effects of oil production on
+that much offshore property\cite{court}.
+
+Texas is heavily dependent on oil and gas for energy and economically. Wind turbines are seen by some as an almost existential threat. During the winter storm of 2021, some politicians blamed the existence of wind turbines for the power outages despite making dup only a small percentage of Texas' energy production\cite{storm}. An offshore wind installation in Texas needs to prove itself to the people that it is durable and reliable and not a threat to oil and gas jobs.
 
 \section{Results to Date}
 
@@ -300,11 +314,38 @@ traditional non-continuous 180-degree servo.
 
 \subsection{MakerPlot}
 
-\emph{[Tamara]}
+MakerPlot is a low-cost Supervisory Control and Data Acquisition (SCADA)
+software package\cite{makerplot}. It retreives data and transmits commands over
+the serial connection between the Arduino and a laptop computer. EWET has
+purchased MakerPlot licenses to be the primary monitoring and manual control
+system for the turbine. However, creation of a custom interface is pending on
+the completion of the automatic control system and system interface on the
+existing Arduinos.
 
 \subsection{Wireless communication}
 
-\emph{[Tamara]}
+One limitation of monitoring and controlling the turbine through the Arduino
+systems is that wires must run from a laptop into the wind tunnel. To physically
+disconnect the system, the addition of a wireless interface utlizing an
+ESP32 chip is being explored. The ESP32 has built-in WiFi and Bluetooth Low
+Energy, of which Bluetooth is more suitable for the project due to WiFi access
+control restrictions that may also be different at the competition venue.
+
+The ESP32 package being utilized is an M5Stack M5StickC Plus. It contains two
+buttons, a 1.14 inch OLED display, and both standard female pin connectors and
+a Seeed Grove connector. The M5StickC is powered using a USB-C connector with
+\qty 5V and \qty{500}{\milli\A}. The unit also contains a built-in
+\qty{120}{\milli\A h} battery.
+
+It is possible for the ESP32 to replace one or both of the Arduinos. However,
+that would require the purchase of additional external components, such as
+motor controllers. It's current task will be limited to being a bridge between
+wired serial communications and wireless Bluetooth communications. It will also
+be necessary to find a way to read Bluetooth data in at the laptop and have it
+appear as though it is coming over the serial port and, conversely, transmit
+apparent serial data over Bluetooth instead because MakerPlot only supports
+serial communication. A fallback would be to use a second device connected by
+USB to the laptop.
 
 \section{Beta Prototype Validation Results}
 \subsection{Power Verification Analysis}
@@ -335,11 +376,11 @@ These findings, however, are not indicative of the pass-fail status of the
 measured power output, and further clarification is needed of the terms in which
 power quality judgments will be passed.
 
-\section{Summary of Work Remaining this Semester}
+\section{Summary of Work Remaining}
 \subsection{Mechanical}
 
-\emph{[I talk about this in the beta test results section, so this can probably
-            be condensed down to just a sentence or so.]}
+% \emph{[I talk about this in the beta test results section, so this can probably
+% be condensed down to just a sentence or so.]}
 
 As discussed in Section \ref{sec:yaw_control}, the yaw control is currently
 being revised by the mechanical engineering subteam at EWET. Artemis Project
@@ -358,11 +399,22 @@ implemented according to the CWC requirements.
 
 \subsection{Control}
 
-\begin{itemize}
-    \item Arduinos
-    \item Solid state relays
-    \item Buck convertors
-\end{itemize}
+The control subsystem consists of the two Arduino computers (and potential
+ESP32), the solid-state relays which control the load, the buck converters
+which stabilize and regulate the power output. The Arduinos are connected to
+the wind vane to determine wind direction, and Hall sensor on the shaft to
+determine the rotational speed. These inputs are used to determine how the
+yaw and blade pitch should be adjusted to either maximize power generation
+during normal operation or to minimize power and speed in high-wind situations.
+
+The work remaining on the control systems largely depends on the implementation
+of the mechanical design. The general algorithms have been developed, although
+experimental data is needed with final mechanical design to determine the
+magnitude of the adjustments that the computer needs to make.
+
+Although the system is designed to operate autonomously, manual control is
+also implemented through the MakerPlot software and an emergency stop button.
+
 
 \subsection{Programing}
 
