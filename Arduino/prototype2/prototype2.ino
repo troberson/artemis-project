@@ -42,8 +42,6 @@ Stepper myStepper(STEPPER_STEPS_PER_REVOLUTION, 8, 10, 9, 11);
 
 const int WIND_SPEED_PIN_TMP = A0;
 const int WIND_SPEED_PIN_RV = A1;
-const int WIND_SPEED_PIN_GND = A2;
-const int WIND_SPEED_PIN_VCC = A3;
 
 // negative numbers yield smaller wind speeds and vice versa.
 const float WIND_SPEED_ADJUSTMENT = 0.3;
@@ -104,10 +102,6 @@ void setup() {
   myStepper.setSpeed(15); // in RPM
 
   // Wind Speed Sensor
-  pinMode(WIND_SPEED_PIN_GND, INPUT);
-  pinMode(WIND_SPEED_PIN_VCC, INPUT);
-  // digitalWrite(WIND_SPEED_PIN_VCC, LOW); // turn off pullups
-
   pinMode(WIND_SPEED_PIN_RV, INPUT);
   pinMode(WIND_SPEED_PIN_TMP, INPUT);
 
