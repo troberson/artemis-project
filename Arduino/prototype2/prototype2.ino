@@ -1,202 +1,194 @@
-/*
-need to knows during testing:
-does increasing pitch value increase or decrease rpm
-minimum RPM turbine can operate at/stay alive
-minimum RPM limited voltage is at with no load
-minimum RPM limited voltage is at under load
+// prototype2.ino
+// Artemis Project Wind Turbine Prototype
+// Steven Fordham, Tamara Roberson
+// Copyright (c) 2022
 
-max power and pitch at 5m/s
-max power and pitch at 6m/s
-max power and pitch at 7m/s
-max power and pitch at 8m/s
-max power and pitch at 9m/s
-max power and pitch at 10m/s
-max power and pitch at 11m/s
+// need to knows during testing:
+// does increasing pitch value increase or decrease rpm
+// minimum RPM turbine can operate at/stay alive
+// minimum RPM limited voltage is at with no load
+// minimum RPM limited voltage is at under load
+//
+// max power and pitch at 5m/s
+// max power and pitch at 6m/s
+// max power and pitch at 7m/s
+// max power and pitch at 8m/s
+// max power and pitch at 9m/s
+// max power and pitch at 10m/s
+// max power and pitch at 11m/s
+//
+// shutdown RPM must be at most 10% of the maximum trubine RPM. 11m/s bin is
+// weighted at .1 so maybe increase this rpm in case min rpm is too high
 
-shutdown RPM must be at most 10% of the maximum trubine RPM. 11m/s bin is
-weighted at .1 so maybe increase this rpm in case min rpm is too high
-*/
-//------------------------------------------------------------------------------------------------Pitch
-//Control
-//Initializing-----------------------------------------------------------------------------
+// Stepper Motor
 #include <Stepper.h>
 
-const int stepsPerRevolution =
-    2048; // change this to fit the number of steps per revolution
-// for your motor
+const int STEPPER_STEPS_PER_REVOLUTION = 2048;
+Stepper myStepper(STEPPER_STEPS_PER_REVOLUTION, 8, 10, 9, 11);
 
-// initialize the stepper library on pins 8 through 11:
-Stepper myStepper(stepsPerRevolution, 8, 10, 9, 11);
+// Wind Speed Initialization
+// Calibration: To calibrate your sensor, put a glass over it, but the sensor
+// should not be touching the desktop surface however. Adjust the
+// WIND_SPEED_ADJUSTMENT until your sensor reads about zero with the glass over
+// it.
 
-//------------------------------------------------------------------------------------------------Wind
-//Speed
-//Initializing-----------------------------------------------------------------------------
-#define analogPinForRV A1 // change to pins you the analog pins are using
-#define analogPinForTMP A0
+const int WIND_SPEED_PIN_TMP = A0;
+const int WIND_SPEED_PIN_RV = A1;
+const int WIND_SPEED_PIN_GND = A2;
+const int WIND_SPEED_PIN_VCC = A3;
 
-// to calibrate your sensor, put a glass over it, but the sensor should not be
-// touching the desktop surface however.
-// adjust the zeroWindAdjustment until your sensor reads about zero with the
-// glass over it.
+// negative numbers yield smaller wind speeds and vice versa.
+const float WIND_SPEED_ADJUSTMENT = 0.3;
+const double WIND_SPEED_VOLTAGE_FACTOR = 0.0048828125;
 
-const float zeroWindAdjustment =
-    .3; // negative numbers yield smaller wind speeds and vice versa.
+float g_wind_speed_therm_ad = 0; // temp termistor value from wind sensor
+float g_wind_speed_rv_ad = 0;    // RV output from wind sensor
+float g_wind_speed_rv_volts = 0; // RV voltage from wind sensor
+float g_wind_speed_temp_c = 0;   // temperature in celsius x 100
+float g_wind_speed_ad = 0;       // wind speed in ???
+float g_wind_speed_volts = 0;    // voltage from wind sensor
+float g_wind_speed_mph = 0;      // wind speed in miles per hour
+unsigned long g_wind_speed_last_millis = 0; // last time wind speed was read
 
-int TMP_Therm_ADunits; // temp termistor value from wind sensor
-float RV_Wind_ADunits; // RV output from wind sensor
-float RV_Wind_Volts;
-unsigned long lastMillis;
-int TempCtimes100;
-float zeroWind_ADunits;
-float zeroWind_volts;
-float WindSpeed_MPH;
-
-//------------------------------------------------------------------------------------------------Current
-//Meter
-//Initializing-----------------------------------------------------------------------------
+// Current Meter Initialization
 #include <Adafruit_INA260.h>
 
 Adafruit_INA260 ina260 = Adafruit_INA260();
 
-//------------------------------------------------------------------------------------------------Tachometer
-//Initializing-----------------------------------------------------------------------------
-// digital pin 2 is the hall pin
-int hall_pin = 2;
+// Tachometer Initialization
+const int TACH_HALL_PIN = 2;
+
 // set number of hall trips for RPM reading (higher improves accuracy)
-float hall_thresh = 10;
-float rpm_val;
+const float TACH_HALL_THRESH = 10;
 
-//---------------------------
+// correction factors added for rpm and voltage
+const float TACH_CORRECTION_RPM = 0.96;
+const float TACH_CORRECTION_VOLTAGE = 0.94;
 
-float voltage;             // may not need voltage or voltage correction
-float RPMcorrection = .96; // correction factor added for rpm and voltage
-float vCorrection = .94;
+float g_tach_rpm = 0; // current RPM
+float g_tach_volts = 0; // current voltage
 
+// ********** SETUP **********
 void setup() {
-  //------------------------------------------------------------------------------------------------Pitch
-  //Control
-  //Setup-----------------------------------------------------------------------------
-  // set the speed at 15 rpm (likely max):
-  myStepper.setSpeed(15);
-
-  //------------------------------------------------------------------------------------------------Wind
-  //Speed
-  //Setup-----------------------------------------------------------------------------
-  Serial.begin(9600); // can increase to 115200 if needed. not sure how other
-                      // devices would react
+  // Can increase baud rate to 115200 if needed but not sure how other
+  // devices would react
   // faster printing to get a bit better throughput on extended info
   // remember to change your serial monitor
-
-  Serial.println("start");
-  // put your setup code here, to run once:
-
-  //   Uncomment the three lines below to reset the analog pins A2 & A3
-  //   This is code from the Modern Device temp sensor (not required)
-  pinMode(A2, INPUT); // GND pin
-  pinMode(A3, INPUT); // VCC pin
-  // digitalWrite(A3, LOW);     // turn off pullups
-
-  pinMode(analogPinForRV, INPUT);
-  pinMode(analogPinForTMP, INPUT);
-
-  //------------------------------------------------------------------------------------------------Current
-  //Meter
-  //Setup-----------------------------------------------------------------------------
-  // Serial.begin(9600);
-  // Wait until serial port is opened
+  Serial.begin(9600);
   while (!Serial) {
     delay(10);
   }
 
+  Serial.println("start");
+
+  // Pitch Control
+  myStepper.setSpeed(15); // in RPM
+
+  // Wind Speed Sensor
+  pinMode(WIND_SPEED_PIN_GND, INPUT);
+  pinMode(WIND_SPEED_PIN_VCC, INPUT);
+  // digitalWrite(WIND_SPEED_PIN_VCC, LOW); // turn off pullups
+
+  pinMode(WIND_SPEED_PIN_RV, INPUT);
+  pinMode(WIND_SPEED_PIN_TMP, INPUT);
+
+  // Current Meter
   Serial.println("Adafruit INA260 Test");
 
   if (!ina260.begin()) {
-    Serial.println("Couldn't find INA260 chip");
-    while (1)
-      ;
+    Serial.println("FATAL: Couldn't find INA260 chip");
+    while (1) {
+    } // FAIL, HANG!
   }
+
   Serial.println("Found INA260 chip");
 
-  //------------------------------------------------------------------------------------------------Tachometer
-  //Setup-----------------------------------------------------------------------------
-  pinMode(hall_pin, INPUT);
+  // Tachometer
+  pinMode(TACH_HALL_PIN, INPUT);
 }
+
+// ********** MAIN LOOP **********
 void loop() {
-  // readWindSpeed();
-  // readCurrent();
-  // readRPM();
-  maintainRPM(500);
+  // read every 200 ms - printing slows this down further
+  // if (millis() - g_wind_speed_last_millis > 200) {
+  //   wind_speed_read();
+  // }
+
+  // current_read();
+  // tach_read_rpm();
+  tach_maintain_rpm(500);
 }
 
-void readWindSpeed() {
-  if (millis() - lastMillis >
-      200) { // read every 200 ms - printing slows this down further
+// ********** WIND SPEED **********
+void wind_speed_read() {
+  g_wind_speed_therm_ad = analogRead(WIND_SPEED_PIN_TMP);
+  g_wind_speed_rv_ad = analogRead(WIND_SPEED_PIN_RV);
+  g_wind_speed_volts = (g_wind_speed_rv_ad * WIND_SPEED_VOLTAGE_FACTOR);
 
-    TMP_Therm_ADunits = analogRead(analogPinForTMP);
-    RV_Wind_ADunits = analogRead(analogPinForRV);
-    RV_Wind_Volts = (RV_Wind_ADunits * 0.0048828125);
+  // these are all derived from regressions from raw data as such they depend
+  // on a lot of experimental factors such as accuracy of temp sensors, and
+  // voltage at the actual wind sensor, (wire losses) which were unaccouted
+  // for.
+  g_wind_speed_temp_c = 0.005 * g_wind_speed_therm_ad * g_wind_speed_therm_ad -
+                        16.862 * g_wind_speed_therm_ad + 9075.4;
 
-    // these are all derived from regressions from raw data as such they depend
-    // on a lot of experimental factors such as accuracy of temp sensors, and
-    // voltage at the actual wind sensor, (wire losses) which were unaccouted
-    // for.
-    TempCtimes100 =
-        (0.005 * ((float)TMP_Therm_ADunits * (float)TMP_Therm_ADunits)) -
-        (16.862 * (float)TMP_Therm_ADunits) + 9075.4;
+  // 13.0C 553 482.39
+  g_wind_speed_ad = -0.006 * g_wind_speed_therm_ad * g_wind_speed_therm_ad +
+                    1.0727 * g_wind_speed_therm_ad + 47.172;
 
-    zeroWind_ADunits =
-        -0.0006 * ((float)TMP_Therm_ADunits * (float)TMP_Therm_ADunits) +
-        1.0727 * (float)TMP_Therm_ADunits + 47.172; //  13.0C  553  482.39
+  g_wind_speed_volts = g_wind_speed_ad * 0.0048828125 - WIND_SPEED_ADJUSTMENT;
 
-    zeroWind_volts = (zeroWind_ADunits * 0.0048828125) - zeroWindAdjustment;
+  // This from a regression from data in the form of
+  // Vraw = V0 + b * WindSpeed ^ c
+  // V0 is zero wind at a particular temperature
+  // The constants b and c were determined by some Excel wrangling with the
+  // solver.
+  g_wind_speed_mph =
+      pow((abs(g_wind_speed_rv_volts - g_wind_speed_volts) / 0.23), 2.7265);
 
-    // This from a regression from data in the form of
-    // Vraw = V0 + b * WindSpeed ^ c
-    // V0 is zero wind at a particular temperature
-    // The constants b and c were determined by some Excel wrangling with the
-    // solver.
+  Serial.print("  TMP volts ");
+  Serial.print(g_wind_speed_therm_ad * 0.0048828125);
 
-    WindSpeed_MPH = pow((abs(RV_Wind_Volts - zeroWind_volts) / .2300), 2.7265);
+  Serial.print("  RV volts ");
+  Serial.print(g_wind_speed_rv_volts);
 
-    Serial.print("  TMP volts ");
-    Serial.print(TMP_Therm_ADunits * 0.0048828125);
+  Serial.print("  TempC*100 ");
+  Serial.print(g_wind_speed_temp_c);
 
-    Serial.print(" RV volts ");
-    Serial.print(RV_Wind_Volts);
+  Serial.print("   ZeroWind volts ");
+  Serial.print(g_wind_speed_volts);
 
-    Serial.print("\t  TempC*100 ");
-    Serial.print(TempCtimes100);
+  Serial.print("   WindSpeed M/S ");
+  Serial.println(g_wind_speed_mph * 0.44704); // probs divide by 2.52
 
-    Serial.print("   ZeroWind volts ");
-    Serial.print(zeroWind_volts);
-
-    Serial.print("   WindSpeed M/S ");
-    Serial.println(WindSpeed_MPH * 0.44704); // probs divide by 2.52
-    lastMillis = millis();
-  }
+  g_wind_speed_last_millis = millis();
 }
 
-void readCurrent() {
+// ********** CURRENT METER **********
+void current_read() {
   Serial.print("Current: ");
   Serial.print(ina260.readCurrent());
   Serial.println(" mA");
 }
 
-void readRPM() {
+// ********** TACHOMETER **********
+void tach_read_rpm() {
   // preallocate values for tach
   float hall_count = 1.0;
   float start = micros();
   bool on_state = false;
-  float timeout =
-      5000000; // 5 seconds. rpm is less than 120 -----------change this to make
-               // it based on hall_thresh. or sacrifice low end accuracy with
-               // just plain timeout. should still work
 
   // counting number of times the hall sensor is tripped
   // but without double counting during the same trip
+  // 5 seconds. rpm is less than 120
+  // change this to make it based on hall_thresh. or sacrifice low end
+  // accuracy with just plain timeout. should still work
+  float timeout = 5000000;
+
+  // read hall sensor
   while (true) {
-    if (digitalRead(hall_pin) == 0) {
-      if (on_state == false) {
+    if (digitalRead(TACH_HALL_PIN) == 0) {
+      if (!on_state) {
         on_state = true;
         hall_count += 1.0;
       }
@@ -204,10 +196,8 @@ void readRPM() {
       on_state = false;
     }
 
-    if (hall_count >= hall_thresh) {
-      break;
-    }
-    if (micros() - start > timeout) {
+    if (hall_count >= TACH_HALL_THRESH ||
+        (micros() - start) > timeout) {
       break;
     }
   }
@@ -215,131 +205,133 @@ void readRPM() {
   // print information about Time and RPM
   float end_time = micros();
   float time_passed = ((end_time - start) / 1000000.0);
+
   // Serial.print("Time Passed: ");
   // Serial.print(time_passed);
   // Serial.println("s");
-  rpm_val = (hall_count / time_passed) * 60.0;
-  rpm_val = rpm_val * RPMcorrection;
-  Serial.print(rpm_val);
+
+  g_tach_rpm = (hall_count / time_passed) * 60.0 * TACH_CORRECTION_RPM;
+  Serial.print(g_tach_rpm);
   Serial.println(" RPM");
   delay(1); // delay in between reads for stability
 
-  //------
-  voltage = rpm_val / 24.3 * vCorrection;
-  /*
-  Serial.print("Voltage: ");
-    Serial.print(voltage);
-    Serial.println(" V");*/
+  g_tach_volts = g_tach_rpm / 24.3 * TACH_CORRECTION_VOLTAGE;
+
+  // Serial.print("Voltage: ");
+  // Serial.print(voltage);
+  // Serial.println(" V");
 }
 
-void maintainRPM(int desiredRPM) // minimum rpm is 150?
-{
-  /*
-  need to find appropriate:
-  delay time between adjustments
-  pitch correction value (adjust by x amount each iteration if needed)
-  no correction needed threshold
+void tach_maintain_rpm(int rpm_desired) {
+  // need to find appropriate:
+  // delay time between adjustments
+  // pitch correction value (adjust by x amount each iteration if needed)
+  // no correction needed threshold
 
+  const int large_correction_val = 200;  // number of steps to adjust
+  const int large_threshold_margin = 50; // +/- rpm threshold
+  const int small_correction_val = 100;  // number of steps to adjust
+  const int small_threshold_margin = 25; // +/- rpm threshold
+  const int coast_threshold = 15;        // rpm
+  const int minimum_speed = 150;         // rpm
+  const int delay_time = 750;
 
-  */
-  int large_correction_val = 200;  // number of steps to adjust
-  int large_threshold_margin = 50; //+/- rpm threshold
-  int small_correction_val = 100;  // number of steps to adjust
-  int small_threshold_margin = 25; //+/- rpm threshold
-  int coastThreshold = 15;         // rpm
-  int minimumSpeed = 150;          // rpm
-  int delayTime = 750;
-  int bigSpeedUp = 0;
+  int big_speed_up = 0;
+  int rpm_cur = 0;
+  int rpm_prev = 0;
 
-  int currentRPM = 0;
-  int previousRPM = 0;
-
-  while (1) {
-
-    readRPM();
-    if (rpm_val < minimumSpeed - 20) {
-      stallControl();
+  while (true) {
+    tach_read_rpm();
+    if (g_tach_rpm < minimum_speed - 20) {
+      tach_stall_control();
     }
-    currentRPM = rpm_val;
+    rpm_cur = g_tach_rpm;
 
-    if (currentRPM > desiredRPM) // if too fast
-    {
-      if (currentRPM <
-          previousRPM - coastThreshold) // check if already slowing
-                                        // down--------maybe adjust this line
-      {
+    // if too fast
+    if (rpm_cur > rpm_desired) {
+      // check if already slowing down
+      // maybe adjust this line
+      if (rpm_cur < rpm_prev - coast_threshold) {
         // do nothing
         Serial.println("Too fast, but already slowing down");
-      } else // not slowing down
-      {
-        if (currentRPM >
-            desiredRPM + large_threshold_margin) // large difference
-        {
+
+        // not slowing down
+      } else {
+
+        // large difference
+        if (rpm_cur > rpm_desired + large_threshold_margin) {
           myStepper.step(large_correction_val);
           Serial.println("Big pitch adjustment slower");
-          bigSpeedUp = 0;
-        } else if (currentRPM >
-                   desiredRPM + small_threshold_margin) // small difference
-        {
+          big_speed_up = 0;
+
+          // small difference
+        } else if (rpm_cur > rpm_desired + small_threshold_margin) {
           myStepper.step(small_correction_val);
           Serial.println("Small pitch adjustment slower");
-          bigSpeedUp = 0;
+          big_speed_up = 0;
+
+          // close enough
+        } else {
+          Serial.println("Close enough");
+          big_speed_up = 0;
         }
       }
+
+      // too slow
     } else {
-      if (currentRPM >
-          previousRPM + coastThreshold) // check if already speeding
-                                        // up--------maybe adjust this line
-      {
+      // check if already speeding up
+      // maybe adjust this line
+      if (rpm_cur > rpm_prev + coast_threshold) {
         // do nothing
         Serial.println("Too slow, but already speeding up");
-      } else // not slowing down
-      {
-        if (currentRPM <
-            desiredRPM -
-                large_threshold_margin) // too slow need large difference
-        {
-          if (bigSpeedUp <=
-              2) // if we need to make a large speed increase too mny times, we
-                 // are likely going to stall, so back off
-          {
+
+        // not speeding up
+      } else {
+        // too slow need large difference
+        if (rpm_cur < rpm_desired - large_threshold_margin) {
+
+          // if we need to make a large speed increase too many times, we
+          // are likely going to stall, so back off
+          if (big_speed_up <= 2) {
             myStepper.step(-large_correction_val);
-            bigSpeedUp =
-                bigSpeedUp +
-                1; // need to know if we alread made a large speed up adjustment
-                   // because maybe we are too pitched and are stalling.
+
+            // need to know if we alread made a large speed up adjustment
+            // because maybe we are too pitched and are stalling.
+            big_speed_up++;
             Serial.println("Big pitch adjustment faster");
+
+            // too slow need small difference
           } else {
-            myStepper.step(large_correction_val *
-                           3); // one more than the bigSpeedUp threshold just
-                               // above to get pitch back on track.
+            // one more than the big_speed_up threshold just
+            // above to get pitch back on track.
+            myStepper.step(large_correction_val * 3);
             Serial.println("Stall Prevention");
-            bigSpeedUp = 0;
+            big_speed_up = 0;
             delay(1000); // delay to allow to speed back up hopefully
           }
 
-        } else if (currentRPM <
-                   desiredRPM -
-                       small_threshold_margin) // too slow need small difference
-        {
+          // too slow need small difference
+        } else if (rpm_cur < rpm_desired - small_threshold_margin) {
           myStepper.step(-small_correction_val);
           Serial.println("Small pitch adjustment faster");
-          bigSpeedUp = 0;
+          big_speed_up = 0;
         }
       }
     }
-    previousRPM = currentRPM;
-    delay(delayTime);
+
+    // update previous rpm
+    rpm_prev = rpm_cur;
+    delay(delay_time);
   }
 }
 
-void stallControl() // in case of emergency, probably will only work if plugged
-                    // in. RPM will be very low
-{
+// in case of emergency, probably will only work if plugged in.
+// RPM will be very low
+void tach_stall_control() {
   myStepper.step(3.5 * 2048); // move all the way back
   delay(100);
-  myStepper.step(-2048); // adjut this to start turbine
+  myStepper.step(-2048); // adjust this to start turbine
   delay(3000);
-  readRPM();
+  tach_read_rpm();
   Serial.println("Restart Due to Stall");
 }
