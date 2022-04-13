@@ -20,6 +20,14 @@
 // shutdown RPM must be at most 10% of the maximum trubine RPM. 11m/s bin is
 // weighted at .1 so maybe increase this rpm in case min rpm is too high
 
+// Can increase baud rate to 115200 if needed but not sure how other
+// devices would react
+// faster printing to get a bit better throughput on extended info
+// remember to change your serial monitor
+const int SERIAL_PIN_RX = 0;
+const int SERIAL_PIN_TX = 1;
+const int SERIAL_BAUD = 9600;
+
 // Stepper Motor
 #include <Stepper.h>
 
@@ -65,21 +73,32 @@ const float TACH_HALL_THRESH = 10;
 const float TACH_CORRECTION_RPM = 0.96;
 const float TACH_CORRECTION_VOLTAGE = 0.94;
 
-float g_tach_rpm = 0; // current RPM
+float g_tach_rpm = 0;   // current RPM
 float g_tach_volts = 0; // current voltage
+
+// Communication Initialization
+#include <SoftwareSerial.h>
+
+const int COMM_PIN_RX = 10;
+const int COMM_PIN_TX = 11;
+const int COMM_BAUD = 9600;
+SoftwareSerial g_comm_serial(COMM_PIN_RX, COMM_PIN_TX);
+char g_comm_input_char = '\0';
 
 // ********** SETUP **********
 void setup() {
-  // Can increase baud rate to 115200 if needed but not sure how other
-  // devices would react
-  // faster printing to get a bit better throughput on extended info
-  // remember to change your serial monitor
-  Serial.begin(9600);
+  Serial.begin(SERIAL_BAUD);
   while (!Serial) {
     delay(10);
   }
 
   Serial.println("start");
+
+  // Initialize Load Control Communications
+  g_comm_serial.begin(COMM_BAUD);
+  while (!g_comm_serial) {
+    delay(10);
+  }
 
   // Pitch Control
   myStepper.setSpeed(15); // in RPM
@@ -105,6 +124,18 @@ void setup() {
 
   // Tachometer
   pinMode(TACH_HALL_PIN, INPUT);
+
+  // Load Controller Communication
+  g_comm_input_char = g_comm_serial.read();
+  switch (g_comm_serial) {
+  case 0:
+    Serial.println("OK");
+    break;
+  default:
+    Serial.print("FAIL (");
+    Serial.print(g_comm_input_char);
+    Serial.println(")");
+  }
 }
 
 // ********** MAIN LOOP **********
@@ -196,8 +227,7 @@ void tach_read_rpm() {
       on_state = false;
     }
 
-    if (hall_count >= TACH_HALL_THRESH ||
-        (micros() - start) > timeout) {
+    if (hall_count >= TACH_HALL_THRESH || (micros() - start) > timeout) {
       break;
     }
   }
