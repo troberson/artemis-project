@@ -1,0 +1,67 @@
+\documentclass[11pt,letterpaper,conference]{IEEEtran}
+
+\usepackage{fontspec}
+\usepackage{amsmath}
+% \usepackage[mathrm=sym]{unicode-math}
+% \usepackage[mathrm=sym, warnings-off={
+    % mathtools-colon,mathtools-overbracket}]{unicode-math}
+\setmainfont{Arial}
+\setsansfont{Arial}
+% \setmathfont{FiraMath-Regular.otf}
+
+\input{_preamble/preamble_letter.tex}
+\input{_preamble/preamble_float.tex}
+\input{_preamble/preamble_math.tex}
+\input{_preamble/preamble_units.tex}
+\input{_preamble/preamble_table.tex}
+
+\usepackage[export]{adjustbox}
+
+\usepackage{balance}
+
+\usepackage[backend=biber, 
+    bibstyle=ieee,
+    citestyle=numeric-comp,
+    sortcites=true,
+    maxbibnames=3
+]{biblatex}
+\addbibresource{references.bib}
+
+% \usepackage{listings}
+% \lstset{
+%     basicstyle = \ttfamily,
+%     xleftmargin = 1cm,
+%     frame = single,
+%     framesep = 1cm,
+%     numbers = left,
+%     numbersep = 1.25cm,
+%     breaklines = true,
+%     upquote = true
+% }
+\usepackage{subfiles}
+
+\setlength\parindent{0.25in}
+
+%% DOCUMENT %%%
+\begin{document}
+
+\NewDocumentCommand{\name}{m}{\underline{\textbf{#1}}}
+
+\subfile{titlepage/titlepage.tex}
+\clearpage
+
+\onecolumn
+\addcontentsline{toc}{section}{Executive Summary}
+\tableofcontents
+\thispagestyle{plain}
+\pagestyle{plain}
+\clearpage
+
+% \twocolumn
+
+\subfile{summary/summary.tex}
+\subfile{intro/intro.tex}
+\subfile{design_objectives/design_objectives.tex}
+\subfile{electrical_design/electrical_design.tex}
+
+\end{document}
