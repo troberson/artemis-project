@@ -20,7 +20,6 @@ enum class Command {
   DECREASE,
   DISABLE,
   MAXIMUM,
-  __END__
 };
 
 } // namespace LoadController

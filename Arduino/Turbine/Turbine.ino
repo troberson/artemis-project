@@ -1,3 +1,35 @@
+// Turbine.ino
+// Artemis Project Wind Turbine Prototype
+// Steven Fordham, Tamara Roberson
+// Copyright (c) 2022
+
+#include "LoadControllerCommand.h"
+#include "LoadControllerStatus.h"
+
+#include <Adafruit_INA260.h>
+#include <SoftwareSerial.h>
+
+namespace Artemis {
+
+LoadController::Status sendLoadCommand(LoadController::Command command);
+LoadController::Status readLoadStatus();
+void maintainRPM(int desiredRPM);
+void debugLoadCommand(LoadController::Command command);
+void debugLoadStatus(LoadController::Status status);
+float readWindSpeed2();
+void printWindSpeed();
+void readCurrent();
+void printCurrent();
+void readRPM();
+void maintainRPM(int desiredRPM);
+void stallControl();
+void startUp();
+void brakeHard();
+void pitchChange(bool dir, unsigned long duration);
+void stopPitching();
+void CurrentCheckDelay(int delayTime);
+int windSpeedLevel();
+int loadSelection();
 
 //------------------------------------------------------------------------------------------------Pitch
 // Control
@@ -21,7 +53,6 @@ float RV_Wind_ADunits;
 //------------------------------------------------------------------------------------------------Current
 // Meter
 // Initializing-----------------------------------------------------------------------------
-#include <Adafruit_INA260.h>
 
 Adafruit_INA260 ina260 = Adafruit_INA260();
 float current;
@@ -36,6 +67,13 @@ float hall_thresh = 20;
 float rpm_val;
 
 float RPMcorrection = 0.88; // correction factor added for rpm and voltage
+
+// Load Controller Settings
+int load_serial_pin_rx = 11;
+int load_serial_pin_tx = 12;
+int load_serial_baud = 9600;
+SoftwareSerial load_serial =
+    SoftwareSerial(load_serial_pin_rx, load_serial_pin_tx);
 
 void setup() {
   //------------------------------------------------------------------------------------------------Pitch
@@ -75,8 +113,80 @@ void setup() {
   //------------------------------------------------------------------------------------------------Tachometer
   // Setup-----------------------------------------------------------------------------
   pinMode(hall_pin, INPUT);
+
+  // Load Controller Setup
+  pinMode(load_serial_pin_rx, INPUT);
+  pinMode(load_serial_pin_tx, OUTPUT);
+  load_serial.begin(load_serial_baud);
+  load_serial.listen();
 }
+
 void loop() { maintainRPM(1200); }
+
+LoadController::Status sendLoadCommand(LoadController::Command command) {
+  debugLoadCommand(command);
+  load_serial.write((int)command);
+  return readLoadStatus();
+}
+
+LoadController::Status readLoadStatus() {
+  auto status = static_cast<LoadController::Status>(load_serial.read());
+  debugLoadStatus(status);
+  return status;
+}
+
+void debugLoadCommand(LoadController::Command command) {
+  Serial.print("Command: ");
+  Serial.print((int) command);
+  Serial.print(" (");
+  switch (command) {
+    case LoadController::Command::NONE:
+      Serial.print("NONE");
+      break;
+    case LoadController::Command::INCREASE:
+      Serial.print("INCREASE");
+      break;
+    case LoadController::Command::DECREASE:
+      Serial.print("DECREASE");
+      break;
+    case LoadController::Command::DISABLE:
+      Serial.print("DISABLE");
+      break;
+    case LoadController::Command::MAXIMUM:
+      Serial.print("MAXIMUM");
+      break;
+    default:
+      Serial.print("Unknown Command");
+  }
+  Serial.println(")");
+}
+
+void debugLoadStatus(LoadController::Status status) {
+  Serial.print("Received: ");
+  Serial.print((int)status);
+  Serial.print(" (");
+  switch (status) {
+  case LoadController::Status::OK:
+    Serial.print("OK");
+    break;
+  case LoadController::Status::DEBUG:
+    Serial.print("DEBUG");
+    break;
+  case LoadController::Status::ERROR_TOO_LOW:
+    Serial.print("ERROR_TOO_LOW");
+    break;
+  case LoadController::Status::ERROR_TOO_HIGH:
+    Serial.print("ERROR_TOO_HIGH");
+    break;
+  case LoadController::Status::ERROR_INVALID_CMD:
+    Serial.print("ERROR_INVALID_CMD");
+    break;
+  default:
+    Serial.print("Unknown Status");
+  }
+  Serial.println(")");
+}
+
 float readWindSpeed2() {
   float temp = 0;
   for (int i = 0; i < 100; i++) {
@@ -85,6 +195,7 @@ float readWindSpeed2() {
   RV_Wind_ADunits = temp / 100;
   return RV_Wind_ADunits;
 }
+
 void printWindSpeed() {
   Serial.print(" RV volts 10-bit ");
   Serial.println(RV_Wind_ADunits);
@@ -119,9 +230,9 @@ void readRPM() {
   float start = micros();
   bool on_state = false;
   float timeout =
-      5000000; // 5 seconds. rpm is less than 120 -----------change this to make
-               // it based on hall_thresh. or sacrifice low end accuracy with
-               // just plain timeout. should still work
+      5000000; // 5 seconds. rpm is less than 120 -----------change this to
+               // make it based on hall_thresh. or sacrifice low end accuracy
+               // with just plain timeout. should still work
 
   // counting number of times the hall sensor is tripped
   // but without double counting during the same trip
@@ -254,14 +365,14 @@ void maintainRPM(int desiredRPM) // minimum rpm is 150?
                 large_threshold_margin) // too slow need large difference
         {
           if (bigSpeedUp <=
-              2) // if we need to make a large speed increase too mny times, we
-                 // are likely going to stall, so back off
+              2) // if we need to make a large speed increase too mny times,
+                 // we are likely going to stall, so back off
           {
             pitchChange(speedUp, large_correction_val);
             bigSpeedUp =
-                bigSpeedUp +
-                1; // need to know if we alread made a large speed up adjustment
-                   // because maybe we are too pitched and are stalling.
+                bigSpeedUp + 1; // need to know if we alread made a large
+                                // speed up adjustment because maybe we are
+                                // too pitched and are stalling.
             CurrentCheckDelay(delayTime);
           } else {
             pitchChange(slowDown, large_correction_val * 3);
@@ -273,8 +384,8 @@ void maintainRPM(int desiredRPM) // minimum rpm is 150?
           }
 
         } else if (currentRPM <
-                   desiredRPM -
-                       small_threshold_margin) // too slow need small difference
+                   desiredRPM - small_threshold_margin) // too slow need small
+                                                        // difference
         {
           pitchChange(speedUp, small_correction_val);
 
@@ -291,8 +402,8 @@ void maintainRPM(int desiredRPM) // minimum rpm is 150?
   }
 }
 
-void stallControl() // in case of emergency, probably will only work if plugged
-                    // in. RPM will be very low
+void stallControl() // in case of emergency, probably will only work if
+                    // plugged in. RPM will be very low
 {
   Serial.println("Restarting Due to Stall");
   pitchChange(slowDown, 4000); // move all the way back
@@ -312,6 +423,8 @@ void startUp() // not using yet
 
 void brakeHard() {
   Serial.println("Brake Hard");
+  sendLoadCommand(LoadController::Command::MAXIMUM);
+  readLoadStatus();
   pitchChange(slowDown, 2000); // move all the way back
 }
 
@@ -446,4 +559,25 @@ int loadSelection() // could change this to a void and just send a message
   {
     return 0;
   }
+}
+
+void test() {
+  sendLoadCommand(LoadController::Command::DISABLE);
+  delay(1000);
+
+  auto status = LoadController::Status::OK;
+  while (status != LoadController::Status::ERROR_TOO_HIGH) {
+    status = sendLoadCommand(LoadController::Command::INCREASE);
+    delay(1000);
+  }
+}
+
+} // namespace Artemis
+
+// Arduino
+void setup() { Artemis::setup(); }
+
+void loop() {
+  //Artemis::loop();
+  Artemis::test();
 }

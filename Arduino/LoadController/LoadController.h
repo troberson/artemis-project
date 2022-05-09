@@ -9,8 +9,8 @@ namespace LoadController {
 class Settings {
 public:
   // Communication
-  static const int COMM_PIN_RX = 0;
-  static const int COMM_PIN_TX = 1;
+  static const int COMM_PIN_RX = 11;
+  static const int COMM_PIN_TX = 12;
   static const int COMM_BAUD = 9600;
   static const int LOAD_PIN_START = 2;
   static const int LOAD_PIN_END = 9;
@@ -18,4 +18,3 @@ public:
 
 } // namespace LoadController
 } // namespace Artemis
-
